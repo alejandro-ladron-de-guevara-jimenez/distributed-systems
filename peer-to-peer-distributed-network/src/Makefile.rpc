@@ -1,0 +1,27 @@
+# Makefile para RPC: cliente llamado "servidor" y servidor llamado "servidor_rpc"
+
+CLIENT = servidor
+SERVER = servidor_rpc
+
+SOURCES_CLNT = server.c
+SOURCES_SVC = rpc_server.c
+SOURCES_X = rpc.x
+
+RPCGEN_FILES = rpc.h rpc_clnt.c rpc_svc.c rpc_xdr.c
+
+CPPFLAGS += -D_REENTRANT -D_GNU_SOURCE
+CFLAGS += -g -I/usr/include/tirpc
+LDLIBS += -ltirpc -lpthread
+RPCGENFLAGS =
+
+all: $(CLIENT) $(SERVER)
+
+$(CLIENT): $(SOURCES_CLNT) $(RPCGEN_FILES)
+	$(CC) $(CPPFLAGS) $(CFLAGS) -o $@ server.c rpc_clnt.c rpc_xdr.c $(LDLIBS)
+
+$(SERVER): $(SOURCES_SVC) $(RPCGEN_FILES)
+	$(CC) $(CPPFLAGS) $(CFLAGS) -o $@ rpc_server.c rpc_svc.c rpc_xdr.c $(LDLIBS)
+
+# Limpieza: elimina solo los archivos .o generados
+clean:
+	rm -f *.o

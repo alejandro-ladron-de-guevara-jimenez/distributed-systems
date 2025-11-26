@@ -1,0 +1,48 @@
+# Makefile para proyecto RPC generado con rpcgen
+
+# Ejecutables finales
+CLIENT = cliente
+SERVER = servidor
+
+# Archivo .x base
+SOURCES.x = tuplas.x
+
+# Archivos generados por rpcgen
+GENERATED_H = tuplas.h
+GENERATED_XDR = tuplas_xdr.c
+GENERATED_CLNT = tuplas_clnt.c
+GENERATED_SVC = tuplas_svc.c
+
+# Archivos fuente propios (los escribes tú)
+CLIENT_SRC = app-cliente.c
+SERVER_SRC = servidor-rpc.c claves.c
+
+# Crear la biblioteca estática libclaves.so
+LIBRARY = libclaves.so
+
+# Flags del compilador
+CFLAGS += -g -I/usr/include/tirpc -fPIC
+LDFLAGS=-L. -lclaves -Wl,-rpath,.
+LDLIBS += -lnsl -lpthread -ldl -ltirpc
+RPCGENFLAGS =
+
+# Regla principal
+all: $(LIBRARY) $(CLIENT) $(SERVER)
+
+# Regla para crear la biblioteca estática libclaves.so desde los archivos fuente
+$(LIBRARY): proxy-rpc.c $(GENERATED_CLNT) $(GENERATED_XDR)
+	$(CC) $(CFLAGS) -shared -o $@ $^
+
+# Cliente
+$(CLIENT): $(CLIENT_SRC) $(LIBRARY)
+	$(CC) -o $@ $^ $(LDLIBS) $(LDFLAGS) $(CFLAGS)
+
+# Servidor
+$(SERVER): $(SERVER_SRC) $(GENERATED_SVC) $(GENERATED_XDR)
+	$(CC) -o $@ $^ $(LDLIBS) $(CFLAGS)
+
+# Limpieza
+clean:
+	$(RM) -f core *.o *.h *.c $(CLIENT) $(SERVER) $(LIBRARY)
+
+.PHONY: all clean
